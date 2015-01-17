@@ -1,0 +1,1518 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.csfb.foa</groupId>
+	<artifactId>foa-parent</artifactId>
+	<version>14_02-SNAPSHOT</version>
+	<packaging>pom</packaging>
+	<description>Parent POM for all FOA kind, Master of the FOA Universe </description>
+	<name>foa-parent(Parent of all FOA kind)</name>
+	<organization>
+		<name>Credit Suisse FOA</name>
+	</organization>
+
+	<!-- To override from the command line, pass -Dpropname=value define versions for jar libraries when referring them from 
+		more than one dependency and if the dependencies should use same version -->
+	<properties>
+		<foa.groupId>com.csfb.foa</foa.groupId>
+		<foa.groupId.gen>com.csfb.foa.gen</foa.groupId.gen>
+		<foa.groupId.obscureJars>foa-unversioned</foa.groupId.obscureJars>
+		<foa.version.gen>${project.version}</foa.version.gen>
+		<jackson.asl.version>1.9.1</jackson.asl.version>
+		<com.sun.jersey.version>1.12</com.sun.jersey.version>
+		<com.ibm.mq.version>7.0.1.7</com.ibm.mq.version>
+		<fest.testjars.version>1.2</fest.testjars.version>
+		<de.schlichtherle.truezip.version>7.4.3</de.schlichtherle.truezip.version>
+		<org.mortbay.jetty.version>6.1.25</org.mortbay.jetty.version>
+		<org.apache.camel.version>2.2.0</org.apache.camel.version>
+		<fix.version>1.5.3</fix.version>
+		<hibernate.version>3.2.1.ga</hibernate.version>
+
+		<slf4j.version>1.7.5</slf4j.version>
+		<unversioned.version>unknown</unversioned.version> <!-- arbitrary string to version unknown versions -->
+	</properties>
+	<repositories>
+
+		<!-- The standard CS repos may well be in your ~/.m2/settings.xml, but they are repeated here so that poms work properly 
+			with maven-ant-tasks in Ant. maven-ant-tasks doesn't seem to check your .m2 settings. -->
+		<repository>
+			<id>releases</id>
+			<name>Releases</name>
+			<url>http://unity.apps.csintra.net/nexus/content/groups/releases</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+
+		<!-- exclude maven central which is otherwise inherited from the super pom -->
+		<repository>
+			<id>central</id>
+			<name>Central Repository</name>
+			<url>http://repo.maven.apache.org/maven2</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>releases</id>
+			<name>Releases</name>
+			<url>http://unity.apps.csintra.net/nexus/content/groups/releases</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</pluginRepository>
+
+		<!-- exclude maven central which is otherwise inherited from the super pom -->
+		<pluginRepository>
+			<id>central</id>
+			<url>http://repo1.maven.org/maven2</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</pluginRepository>
+	</pluginRepositories>
+	<developers>
+		<developer>
+			<id>yshen1</id>
+			<email>yimin.shen@credit-suisse.com</email>
+			<name>Yimin</name>
+		</developer>
+	</developers>
+
+	<build>
+		<!-- define non standard locations for prod/src and test/src This section can be deleted if we switch to standard Maven 
+			dirs -->
+		<sourceDirectory>prod/src</sourceDirectory>
+		<testSourceDirectory>test/src</testSourceDirectory>
+		<resources>
+			<resource>
+				<directory>prod/src</directory>
+				<!--TODO:check which of these resources can be moved to -->
+				<includes>
+					<include>**/*.jar</include>
+					<include>**/*.gif</include>
+					<include>**/*.png</include>
+					<include>**/*.prop</include>
+					<include>**/*.xml</include>
+					<include>**/*.xsl</include>
+					<include>**/*.txt</include>
+					<include>**/*.READ</include>
+					<include>**/*.ser</include>
+					<include>**/*.csv</include>
+					<include>**/*.mdi</include>
+					<include>**/*.fix</include>
+					<include>**/jaxb.index</include>
+					<include>**/*.properties</include>
+				</includes>
+			</resource>
+		</resources>
+		<testResources>
+			<testResource>
+				<directory>config</directory>
+			</testResource>
+			<testResource>
+				<directory>src/test/resources</directory>
+				<excludes>
+					<exclude>manual-exclude-from-mvn/*.*</exclude>
+				</excludes>
+			</testResource>
+			<testResource>
+				<directory>test/src</directory>
+				<includes>
+					<!-- set of incluse resources below copied from and build standard-macros.xml.compileJava(macro) -->
+					<include>**/*.jar</include>
+					<include>**/*.gif</include>
+					<include>**/*.png</include>
+					<include>**/*.prop</include>
+					<include>**/*.xml</include>
+					<include>**/*.xsl</include>
+					<include>**/*.txt</include>
+					<include>**/*.READ</include>
+					<include>**/*.ser</include>
+					<include>**/*.csv</include>
+					<include>**/*.mdi</include>
+					<include>**/*.fix</include>
+					<include>**/jaxb.index</include>
+					<include>**/*.properties</include>
+					<include>**/*.permissions</include>
+				</includes>
+			</testResource>
+		</testResources>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-assembly-plugin</artifactId>
+					<version>2.4</version>
+					<configuration>
+						<descriptors>
+							<descriptor>distribution/assembly-descriptor.xml</descriptor>
+						</descriptors>
+					</configuration>
+
+					<executions>
+						<execution>
+							<id>make-assembly</id> <!-- this is used for inheritance merges -->
+							<phase>package</phase> <!-- bind to the packaging phase -->
+							<goals>
+								<goal>single</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.1</version>
+					<configuration>
+						<source>1.6</source>
+						<target>1.6</target>
+						<fork>true</fork>
+						<meminitial>128m</meminitial>
+						<maxmem>512m</maxmem>
+						<executable>${JAVA_1_6_HOME}/bin/javac</executable>
+						<compilerVersion>1.6</compilerVersion>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-jar-plugin</artifactId>
+					<version>2.4</version>
+					<executions>
+						<execution>
+							<goals>
+								<!-- produce test jars for each project so that test to test class dependency can be specified -->
+								<goal>test-jar</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<version>2.17</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-report-plugin</artifactId>
+					<version>2.17</version>
+					<configuration>
+						<showSuccess>false</showSuccess>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-failsafe-plugin</artifactId>
+					<version>2.17</version>
+					<executions>
+						<execution>
+							<goals>
+								<goal>integration-test</goal>
+								<goal>verify</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+
+	</build>
+
+	<profiles>
+		<profile>
+			<!-- Defines foa junit fuest suite profile. Disble surefire plugin /enable failsafe plugin Use a new VM instance for each 
+				test class -->
+			<id>foa-fuest</id>
+			<build>
+				<plugins>
+					<plugin>
+						<artifactId>maven-failsafe-plugin</artifactId>
+						<configuration>
+							<includes>
+								<include>**/com/csfb/**/*Fuest.java</include>
+							</includes>
+							<forkedProcessTimeoutInSeconds>0</forkedProcessTimeoutInSeconds>
+							<forkCount>1</forkCount>
+							<reuseForks>false</reuseForks>
+							<runOrder>alphabetical</runOrder>
+							<redirectTestOutputToFile>true</redirectTestOutputToFile>
+							<jvm>${JAVA_1_7_HOME}/jre/bin/java</jvm>
+						</configuration>
+					</plugin>
+					<plugin>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<configuration>
+							<skipTests>true</skipTests>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<!-- Defines foa junit test suite profile...Exclude NotUnitTests, failingInMaventests. Also Custom include mechanism -->
+			<id>foa-junit</id>
+			<build>
+				<plugins>
+					<plugin>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<configuration>
+							<!-- Excludes all tests of category notUnit from default test run -->
+							<excludedGroups>com.csfb.foa.junit.category.NotUnit,com.csfb.foa.junit.category.FailsInMaven</excludedGroups>
+							<includes>
+								<include>**/*Test.java</include>
+							</includes>
+							<excludes>
+								<!-- exclude one of the default patterns -->
+								<exclude>**/swxtrader/**/*FESTTest.java</exclude>
+							</excludes>
+							<!-- by default, let build continue even if test fails -->
+							<testFailureIgnore>true</testFailureIgnore>
+							<forkedProcessTimeoutInSeconds>300</forkedProcessTimeoutInSeconds>
+							<argLine>-Djava.awt.headless=true</argLine>
+							<jvm>${JAVA_1_7_HOME}/jre/bin/java</jvm>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<!-- Tests which are intended as unit tests but are excluded from the fast suite because e.g. they are too slow or rely 
+				on an external dependency -->
+			<id>NotUnitTests</id>
+			<build>
+				<plugins>
+					<plugin>
+						<artifactId>maven-failsafe-plugin</artifactId>
+						<configuration>
+							<groups>com.csfb.foa.junit.category.NotUnit</groups>
+							<excludedGroups>com.csfb.foa.junit.category.FailsInMaven</excludedGroups>
+							<includes>
+								<include>**/*Test.java</include>
+							</includes>
+							<excludes>
+								<exclude>**/*FESTTest.java</exclude>
+								<exclude>**/*FestTest.java</exclude>
+							</excludes>
+							<forkedProcessTimeoutInSeconds>300</forkedProcessTimeoutInSeconds>
+							<argLine>-Djava.awt.headless=true</argLine>
+							<jvm>${JAVA_1_7_HOME}/jre/bin/java</jvm>
+						</configuration>
+					</plugin>
+					<plugin>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<configuration>
+							<skipTests>true</skipTests>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>FailsInMavenTests</id>
+			<build>
+				<plugins>
+					<plugin>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<configuration>
+							<!-- Excludes all tests of category notUnit from default test run -->
+							<groups>com.csfb.foa.junit.category.FailsInMaven</groups>
+							<excludedGroups>com.csfb.foa.junit.category.NotUnit</excludedGroups>
+							<includes>
+								<include>**/*Test.java</include>
+							</includes>
+							<excludes>
+								<!-- exclude one of the default patterns -->
+								<exclude>**/swxtrader/**/*FESTTest.java</exclude>
+							</excludes>
+							<!-- by default, let build continue even if test fails -->
+							<testFailureIgnore>true</testFailureIgnore>
+							<forkedProcessTimeoutInSeconds>300</forkedProcessTimeoutInSeconds>
+							<argLine>-Djava.awt.headless=true</argLine>
+							<jvm>${JAVA_1_7_HOME}/jre/bin/java</jvm>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<!-- Copied verbatim from Maven technical FAQ The profile currently serves the purpose of dealing with tools.jar. See Maven 
+			technical FAQ. -->
+		<!-- since around Maven 3, Maven can usually autodetect your JDK. If not then at least set JAVA_HOME -->
+		<profile>
+			<id>default-tools.jar</id>
+			<activation>
+				<property>
+					<name>java.vendor</name>
+					<value>Sun Microsystems Inc.</value>
+				</property>
+			</activation>
+			<dependencyManagement>
+				<dependencies>
+					<dependency>
+						<groupId>com.sun</groupId>
+						<artifactId>tools</artifactId>
+						<version>1.6.0</version>
+						<scope>system</scope>
+						<systemPath>${java.home}/../lib/tools.jar</systemPath>
+					</dependency>
+				</dependencies>
+			</dependencyManagement>
+		</profile>
+	</profiles>
+
+	<!-- *********************************************************** DEPENDENCY MANAGEMENT Do not be concerned to see that there 
+		are too many dependencies in this section. Listing here does not bring in the dependency - that happens in the 'dependency' 
+		(not dependencyManagement) section of the child project. This section defines versions of jars in one place , making sure 
+		there is no inconsistency across sibling projects Also please add any new jar in dependency section first even if it is used 
+		only in one place. This makes it easy to search and manage dependencies *********************************************************** -->
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>jacob</artifactId>
+				<version>unknown</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>fop-avalon</artifactId>
+				<version>unknown</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>fop-batik</artifactId>
+				<version>unknown</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>convertor</artifactId>
+				<version>1.5.4</version>
+			</dependency>
+
+			<!-- JavaRogueWave added to local repo. needed as runTime mds dependency -->
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>JavaRogueWave</artifactId>
+				<version>1.6.0</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.gen}</groupId>
+				<artifactId>TacsWebService3</artifactId>
+				<version>unknown</version>
+			</dependency>
+
+			<!-- added to local repo.check later on as has only 2 classes ! -Dfile=foa-eurex-rdf/prod/lib/foa-eurex-rdf-jaxb-fixml.jar -->
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}.${project.groupId}</groupId>
+				<artifactId>f2j_math</artifactId>
+				<version>_1</version>
+			</dependency>
+
+
+			<!-- foa-gen start :foa-generated jar added to local repo.redploy to maven repo on every change -->
+			<dependency>
+				<groupId>${foa.groupId.gen}</groupId>
+				<artifactId>foa-eurex-clearing-jaxb-fixml</artifactId>
+				<version>${foa.version.gen}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.gen}</groupId>
+				<artifactId>ibt-batch-upload-jaxb</artifactId>
+				<version>${foa.version.gen}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.gen}</groupId>
+				<artifactId>foa-eurex-rdf-jaxb-fixml</artifactId>
+				<version>${foa.version.gen}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.gen}</groupId>
+				<artifactId>xbeans_bem-trade</artifactId>
+				<version>${foa.version.gen}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.gen}</groupId>
+				<artifactId>foa-xbooker-jaxb</artifactId>
+				<version>${foa.version.gen}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.gen}</groupId>
+				<artifactId>EurexFIX44</artifactId>
+				<version>${foa.version.gen}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.gen}</groupId>
+				<artifactId>AESFIX42</artifactId>
+				<version>${foa.version.gen}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.gen}</groupId>
+				<artifactId>XetraFIX44</artifactId>
+				<version>${foa.version.gen}</version>
+			</dependency>
+			<dependency>
+				<groupId>${foa.groupId.gen}</groupId>
+				<artifactId>PrimetradeFIX44</artifactId>
+				<version>${foa.version.gen}</version>
+			</dependency>
+			<dependency>
+				<groupId>${foa.groupId.gen}</groupId>
+				<artifactId>CS_custom_FIX44</artifactId>
+				<version>${foa.version.gen}</version>
+			</dependency>
+			<dependency>
+				<groupId>${foa.groupId.gen}</groupId>
+				<artifactId>Bovespa_FIX42_spec</artifactId>
+				<version>${foa.version.gen}</version>
+			</dependency>
+			<dependency>
+				<groupId>${foa.groupId.gen}</groupId>
+				<artifactId>foa-eurex-ers-jaxb-fixml</artifactId>
+				<version>${foa.version.gen}</version>
+			</dependency>
+			<dependency>
+				<groupId>${foa.groupId.gen}</groupId>
+				<artifactId>foa-fixml-common-jaxb-fixml</artifactId>
+				<version>${foa.version.gen}</version>
+			</dependency>
+			<dependency>
+				<groupId>${foa.groupId.gen}</groupId>
+				<artifactId>foa-jaxb</artifactId>
+				<version>${foa.version.gen}</version>
+			</dependency>
+			<dependency>
+				<groupId>${foa.groupId.gen}</groupId>
+				<artifactId>foa-common-jaxb</artifactId>
+				<version>${foa.version.gen}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.gen}</groupId>
+				<artifactId>foa-datadict</artifactId>
+				<version>${foa.version.gen}</version>
+			</dependency>
+
+
+			<dependency>
+				<groupId>${foa.groupId.gen}</groupId>
+				<artifactId>foa-favolimport-ws-client</artifactId>
+				<version>${foa.version.gen}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.gen}</groupId>
+				<artifactId>foa-favolimport-ws-server</artifactId>
+				<version>${foa.version.gen}</version>
+			</dependency>
+
+
+			<!-- check with owner:swx-sti-fix.jar -->
+			<dependency>
+				<groupId>${foa.groupId.gen}</groupId>
+				<artifactId>swx-sti-fix</artifactId>
+				<version>${foa.version.gen}</version>
+			</dependency>
+
+			<!-- end foa-gen -->
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>jagora-lib</artifactId>
+				<version>2.2.34-r24711</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>text-table-formatter</artifactId>
+				<version>1.1.1</version>
+			</dependency>
+
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>coherence</artifactId>
+				<version>3.7.1.8</version>
+			</dependency>
+
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>saaj-impl</artifactId>
+				<version>unknown</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>saaj-api</artifactId>
+				<version>unknown</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>oncrpc</artifactId>
+				<version>1.0.7</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>proxool</artifactId>
+				<version>0.8.3</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>portmap</artifactId>
+				<version>1.0.7</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>MDSRPCClient</artifactId>
+				<version>1.6.2</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>coherence-client-utils</artifactId>
+				<version>0.2.0</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>MDSCoherenceCommon</artifactId>
+				<version>1.2.5</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>MDSCommon</artifactId>
+				<version>1.4.7</version>
+			</dependency>
+
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>MDSBusinessObjects</artifactId>
+				<version>2.6.3</version>
+			</dependency>
+
+			<!-- gtoup obscureJars start :jars which can not be sourced from maven repo added to local jars -->
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>dmsDirectWs</artifactId>
+				<version>unknown</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>position-service-client</artifactId>
+				<version>unknown</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>jrpcgen</artifactId>
+				<version>1.0.7</version>
+			</dependency>
+
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>JClient</artifactId>
+				<version>3.2.9</version>
+			</dependency>
+
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>cfcFramework</artifactId>
+				<version>unknown</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>statemap</artifactId>
+				<version>unknown</version>
+			</dependency>
+
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>data-exporter</artifactId>
+				<version>1.0.0</version>
+			</dependency>
+
+			<!--added tcs_dmt_idl to local repo Exact version unknown.version deduced from class file ! -->
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>tcs_dmt_idl</artifactId>
+				<version>1.6.50</version>
+			</dependency>
+
+			<!-- equipWs.jar added to local repo.check comment from old pom for this WS class -->
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>equipWs</artifactId>
+				<version>unknown</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>volWs</artifactId>
+				<version>${foa.version.gen}</version>
+			</dependency>
+
+			<!-- javaview.de, for 3D surface viewing. License file missing. -->
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}.de.javaview</groupId>
+				<artifactId>javaview</artifactId>
+				<version>3.95</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>rfa</artifactId>
+				<version>${unversioned.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>jvx</artifactId>
+				<version>unknown</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}.jexcelapi</groupId>
+				<artifactId>jxl</artifactId>
+				<version>unknown</version>
+			</dependency>
+
+			<!--xmlgraphics o.20.4 cant be downloaded. new version breaks build ! -->
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}.org.apache.xmlgraphics</groupId>
+				<artifactId>fop</artifactId>
+				<version>0.20.4</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>JRclient</artifactId>
+				<version>RE817</version>
+			</dependency>
+
+			<!-- TODO: changed version curent version is 0.18-nogui.jar but updated to 0.18 as the no gui is supposed to be only for 
+				Android (without awt)check with GUI experts! -->
+			<dependency>
+				<groupId>com.googlecode.efficient-java-matrix-library</groupId>
+				<artifactId>ejml</artifactId>
+				<version>0.18</version>
+			</dependency>
+
+			<dependency>
+				<groupId>javassist</groupId>
+				<artifactId>javassist</artifactId>
+				<version>3.1</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.python</groupId>
+				<artifactId>jython</artifactId>
+				<version>2.5.3</version>
+			</dependency>
+
+			<dependency>
+				<groupId>log4j</groupId>
+				<artifactId>apache-log4j-extras</artifactId>
+				<version>1.0</version>
+			</dependency>
+
+			<dependency>
+				<groupId>net.sourceforge.jtds</groupId>
+				<artifactId>jtds</artifactId>
+				<version>1.2.2</version>
+			</dependency>
+
+
+			<!--todo: Avalon 0.20.4 not available.Upgraded <dependency> <groupId>foa-unversioned.org.apache.avalon</groupId> <artifactId>avalon-framework</artifactId> 
+				<version>0.20.4</version> </dependency> -->
+			<dependency>
+				<groupId>avalon-framework</groupId>
+				<artifactId>avalon-framework</artifactId>
+				<version>4.2.0</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}.org.jrobin</groupId>
+				<artifactId>jrobin</artifactId>
+				<version>1.5.4</version>
+			</dependency>
+
+
+			<dependency>
+				<groupId>org.openfast</groupId>
+				<artifactId>openfast</artifactId>
+				<version>1.0.0</version>
+			</dependency>
+
+			<dependency>
+				<groupId>xmlrpc</groupId>
+				<artifactId>xmlrpc</artifactId>
+				<version>1.2-b1</version>
+			</dependency>
+
+			<!-- todo:check current foa version is 3.7.3 -->
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}.com.miglayout</groupId>
+				<artifactId>miglayout-swing</artifactId>
+				<version>3.7.3</version>
+			</dependency>
+
+			<dependency>
+				<groupId>log4j</groupId>
+				<artifactId>log4j</artifactId>
+				<version>1.2.16</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-api</artifactId>
+				<version>${slf4j.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>log4j-over-slf4j</artifactId>
+				<version>${slf4j.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-log4j12</artifactId>
+				<version>${slf4j.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>joda-time</groupId>
+				<artifactId>joda-time</artifactId>
+				<version>2.3</version>
+			</dependency>
+			<dependency>
+				<groupId>quickfixj</groupId>
+				<artifactId>quickfixj-core</artifactId>
+				<version>${fix.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>quickfixj</groupId>
+				<artifactId>quickfixj-msg-fix44</artifactId>
+				<version>${fix.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>quickfixj</groupId>
+				<artifactId>quickfixj-msg-fix43</artifactId>
+				<version>${fix.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>quickfixj</groupId>
+				<artifactId>quickfixj-msg-fix42</artifactId>
+				<version>${fix.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>quickfixj</groupId>
+				<artifactId>quickfixj-msg-fix41</artifactId>
+				<version>${fix.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>quickfixj</groupId>
+				<artifactId>quickfixj-msg-fix40</artifactId>
+				<version>${fix.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.google.guava</groupId>
+				<artifactId>guava</artifactId>
+				<version>17.0</version>
+			</dependency>
+			<dependency>
+				<groupId>com.google.code.gson</groupId>
+				<artifactId>gson</artifactId>
+				<version>2.2.2</version>
+			</dependency>
+			<dependency>
+				<groupId>com.google.protobuf</groupId>
+				<artifactId>protobuf-java</artifactId>
+				<version>2.4.1</version>
+			</dependency>
+			<dependency>
+				<groupId>com.googlecode.protobuf-java-format</groupId>
+				<artifactId>protobuf-java-format</artifactId>
+				<version>1.2</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-core</artifactId>
+				<version>3.2.4.RELEASE</version> 			<!-- todo: 3.0.5.RELEASE check current version -->
+			</dependency>
+			<!-- todo: 3.0.5.RELEASE check if the version needs to be matching with above spring version -->
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>org.springframework.jms</artifactId>
+				<version>3.0.5.RELEASE</version>
+			</dependency>
+
+			<dependency>
+				<groupId>findbugs</groupId>
+				<artifactId>findbugs</artifactId>
+				<version>1.0.0</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.google.code.findbugs</groupId>
+				<artifactId>jsr305</artifactId>
+				<version>1.3.9</version>
+			</dependency>
+
+			<dependency>
+				<groupId>net.sourceforge.findbugs</groupId>
+				<artifactId>jsr305</artifactId>
+				<version>1.3.2</version>
+			</dependency>
+
+			<dependency>
+				<groupId>commons-collections</groupId>
+				<artifactId>commons-collections</artifactId>
+				<version>3.2.1</version>
+			</dependency>
+			<dependency>
+				<groupId>commons-codec</groupId>
+				<artifactId>commons-codec</artifactId>
+				<version>1.8</version>
+			</dependency>
+			<dependency>
+				<groupId>commons-lang</groupId>
+				<artifactId>commons-lang</artifactId>
+				<version>2.5</version>
+			</dependency>
+			<dependency>
+				<groupId>commons-configuration</groupId>
+				<artifactId>commons-configuration</artifactId>
+				<version>1.7</version>
+			</dependency>
+			<dependency>
+				<groupId>commons-io</groupId>
+				<artifactId>commons-io</artifactId>
+				<version>2.3</version>
+			</dependency>
+			<dependency>
+				<groupId>commons-pool</groupId>
+				<artifactId>commons-pool</artifactId>
+				<version>1.6</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache.lucene</groupId>
+				<artifactId>lucene-core</artifactId>
+				<version>3.6.0</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache.camel</groupId>
+				<artifactId>camel-jms</artifactId>
+				<version>${org.apache.camel.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache.camel</groupId>
+				<artifactId>camel-core</artifactId>
+				<version>${org.apache.camel.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>xbean</artifactId>
+				<version>unknown</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.eclipse.jdt</groupId>
+				<artifactId>core</artifactId>
+				<version>3.1.1</version>
+			</dependency>
+
+			<dependency>
+				<groupId>cglib</groupId>
+				<artifactId>cglib</artifactId>
+				<version>2.2</version>
+			</dependency>
+			<dependency>
+				<groupId>de.schlichtherle.truezip</groupId>
+				<artifactId>truezip-kernel</artifactId>
+				<version>${de.schlichtherle.truezip.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>de.schlichtherle.truezip</groupId>
+				<artifactId>truezip-file</artifactId>
+				<version>${de.schlichtherle.truezip.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>de.schlichtherle.truezip</groupId>
+				<artifactId>truezip-driver-zip</artifactId>
+				<version>${de.schlichtherle.truezip.version}</version>
+				<scope>runtime</scope>
+			</dependency>
+			<dependency>
+				<groupId>io.netty</groupId>
+				<artifactId>netty-all</artifactId>
+				<version>4.0.17.Final</version>
+			</dependency>
+
+			<dependency>
+				<groupId>jboss</groupId>
+				<artifactId>jboss-archive-browsing</artifactId>
+				<version>5.0.0alpha-200607201-119</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.jfree</groupId>
+				<artifactId>jfreechart</artifactId>
+				<version>1.0.15</version><!-- note 1.0.17 in svn -->
+			</dependency>
+			<dependency>
+				<groupId>org.jfree</groupId>
+				<artifactId>jcommon</artifactId>
+				<version>1.0.17</version><!-- note 1.0.21 in svn -->
+			</dependency>
+			<dependency>
+				<groupId>org.mortbay.jetty</groupId>
+				<artifactId>jetty-html</artifactId>
+				<version>${org.mortbay.jetty.version}</version>
+
+				<exclusions>
+					<exclusion>
+						<groupId>org.mortbay.jetty</groupId>
+						<artifactId>servlet-api</artifactId>
+
+					</exclusion>
+				</exclusions>
+
+			</dependency>
+
+			<!-- USe same version as current servlet.jar bundled with FOA -->
+			<dependency>
+				<groupId>org.mortbay.jetty</groupId>
+				<artifactId>servlet-api-2.5</artifactId>
+				<version>6.0.1</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.bushe</groupId>
+				<artifactId>eventbus</artifactId>
+				<version>1.4</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.jdom</groupId>
+				<artifactId>jdom</artifactId>
+				<version>1.1</version>
+			</dependency>
+
+			<dependency>
+				<groupId>redis.clients</groupId>
+				<artifactId>jedis</artifactId>
+				<version>2.1.0</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.codehaus.jackson</groupId>
+				<artifactId>jackson-xc</artifactId>
+				<version>${jackson.asl.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.codehaus.jackson</groupId>
+				<artifactId>jackson-core-asl</artifactId>
+				<version>${jackson.asl.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.codehaus.jackson</groupId>
+				<artifactId>jackson-mapper-asl</artifactId>
+				<version>${jackson.asl.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.codehaus.jackson</groupId>
+				<artifactId>jackson-jaxrs</artifactId>
+				<version>${jackson.asl.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.supercsv</groupId>
+				<artifactId>supercsv</artifactId>
+				<version>1.52</version>
+			</dependency>
+
+
+			<dependency>
+				<groupId>org.apache.qpid</groupId>
+				<artifactId>qpid-client</artifactId>
+				<version>0.12</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.thoughtworks.xstream</groupId>
+				<artifactId>xstream</artifactId>
+				<version>1.3.1</version>
+			</dependency>
+
+
+			<!-- sybase drivers (may be proprietery jars ? )not available with nexus repo -->
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>jconn2</artifactId>
+				<version>unknown</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>jconn3</artifactId>
+				<version>unknown</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>inspector</artifactId>
+				<version>1.5.4</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>f2jutil</artifactId>
+				<version>1.0</version>
+			</dependency>
+
+			<!-- todo:check .dont know exact version of current ejb3-persistence.jar. moved to next stable avalilable verison -->
+			<dependency>
+				<groupId>hibernate</groupId>
+				<artifactId>hibernate-entitymanager</artifactId>
+				<version>3.4.0.GA</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.hibernate</groupId>
+				<artifactId>hibernate-annotations</artifactId>
+				<version>${hibernate.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.hibernate</groupId>
+				<artifactId>hibernate</artifactId>
+				<version>${hibernate.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.hibernate</groupId>
+				<artifactId>ejb3-persistence</artifactId>
+				<version>3.3.2.Beta1</version>
+			</dependency>
+			<!-- todo:check dont know exact version of current hsqldb.jar .Shoud we use the latest? -->
+			<dependency>
+				<groupId>hsqldb</groupId>
+				<artifactId>hsqldb</artifactId>
+				<version>1.8.0.5</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.ant</groupId>
+				<artifactId>ant</artifactId>
+				<version>1.8.4</version>
+			</dependency>
+
+			<dependency>
+				<groupId>dom4j</groupId>
+				<artifactId>dom4j</artifactId>
+				<version>1.1</version>
+			</dependency>
+			<!-- other proprietary (non open source projects )dependencies -->
+
+			<!-- todo:check upgraded from 1.2.46 to 4.4.3 as jar not available in mvn repo.check with owner -->
+			<dependency>
+				<groupId>com.tibco.ems.java</groupId>
+				<artifactId>tibjms</artifactId>
+				<version>4.4.3</version>
+				<exclusions>
+					<!-- avoid having multiple versions of jndi jar -->
+					<exclusion>
+						<groupId>com.tibco.ems.java</groupId>
+						<artifactId>jndi</artifactId>
+					</exclusion>
+				</exclusions>
+			</dependency>
+
+			<!-- verify: which is correct version?old jar shows 1.4.48 version on binaries -->
+			<dependency>
+				<groupId>com.ibm.mq</groupId>
+				<artifactId>com.ibm.mq</artifactId>
+				<version>${com.ibm.mq.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.ibm.mq</groupId>
+				<artifactId>jms</artifactId>
+				<version>${com.ibm.mq.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.ibm.mq</groupId>
+				<artifactId>com.ibm.mqjms</artifactId>
+				<version>${com.ibm.mq.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.ibm.mq</groupId>
+				<artifactId>com.ibm.mq.jmqi</artifactId>
+				<version>${com.ibm.mq.version}</version>
+			</dependency>
+
+			<!-- Sun/oracle dependencies -->
+			<dependency>
+				<groupId>javax.ws.rs</groupId>
+				<artifactId>jsr311-api</artifactId>
+				<version>1.1.1</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>jaxm-runtime</artifactId>
+				<version>unknown</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>jaxm-api</artifactId>
+				<version>unknown</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.sun.jersey</groupId>
+				<artifactId>jersey-client</artifactId>
+				<version>${com.sun.jersey.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.sun.jersey</groupId>
+				<artifactId>jersey-bundle</artifactId>
+				<version>${com.sun.jersey.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.sun.jersey</groupId>
+				<artifactId>jersey-server</artifactId>
+				<version>${com.sun.jersey.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.sun.jersey</groupId>
+				<artifactId>jersey-core</artifactId>
+				<version>${com.sun.jersey.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>javax.mail</groupId>
+				<artifactId>mail</artifactId>
+				<version>1.4.3</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}.com.sun</groupId>
+				<artifactId>tools</artifactId>
+				<version>unknown</version>
+			</dependency>
+			<!-- verify: old pom did not specify version here.Whats the right way? -->
+			<dependency>
+				<groupId>javax.jms</groupId>
+				<artifactId>jms</artifactId>
+				<version>1.1</version>
+			</dependency>
+
+			<!-- todo:check version?? -->
+			<dependency>
+				<groupId>javax.persistence</groupId>
+				<artifactId>persistence-api</artifactId>
+				<version>1.0</version>
+			</dependency>
+			<dependency>
+				<groupId>com.sun.grizzly</groupId>
+				<artifactId>grizzly-servlet-webserver</artifactId>
+				<version>1.9.18-i</version>
+				<exclusions>
+					<exclusion>
+						<groupId>javax.servlet</groupId>
+						<artifactId>servlet-api</artifactId>
+					</exclusion>
+				</exclusions>
+			</dependency>
+			<dependency>
+				<groupId>rome</groupId>
+				<artifactId>rome</artifactId>
+				<version>1.0</version>
+				<exclusions>
+					<exclusion>
+						<groupId>jdom</groupId>
+						<artifactId>jdom</artifactId>
+					</exclusion>
+				</exclusions>
+			</dependency>
+			<dependency>
+				<groupId>c3p0</groupId>
+				<artifactId>c3p0</artifactId>
+				<version>0.9.0</version>
+			</dependency>
+			<dependency>
+				<groupId>com.google.caliper</groupId>
+				<artifactId>caliper</artifactId>
+				<version>0.5-rc1</version>
+			</dependency>
+
+			<!-- Used only by Ldn project as runtime dependency. Could not decide from existing eclipse jar which version.Used one 
+				of available in nexus (10.2) -->
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>classes12</artifactId>
+				<version>unknown</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.gen}</groupId>
+				<artifactId>position-service-client</artifactId>
+				<version>unknown</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}.com.microsoft.sqlserver</groupId>
+				<artifactId>sqljdbc</artifactId>
+				<version>unknown</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}.com.microsoft.jdbc</groupId>
+				<artifactId>msutil</artifactId>
+				<version>unknown</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}.com.microsoft.jdbc</groupId>
+				<artifactId>mssqlserver</artifactId>
+				<version>unknown</version>
+			</dependency>
+
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}.com.microsoft.jdbc</groupId>
+				<artifactId>msbase</artifactId>
+				<version>unknown</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.sun.jersey.jersey-test-framework</groupId>
+				<artifactId>jersey-test-framework-core</artifactId>
+				<version>1.12</version>
+				<exclusions>
+					<exclusion>
+						<groupId>javax.servlet</groupId>
+						<artifactId>javax.servlet-api</artifactId>
+
+					</exclusion>
+				</exclusions>
+			</dependency>
+
+			<dependency>
+				<groupId>com.sun.jersey.jersey-test-framework</groupId>
+				<artifactId>jersey-test-framework-inmemory</artifactId>
+				<version>1.12</version>
+				<exclusions>
+					<exclusion>
+						<groupId>javax.servlet</groupId>
+						<artifactId>javax.servlet-api</artifactId>
+					</exclusion>
+				</exclusions>
+			</dependency>
+			<!-- Test only dependencies -->
+			<dependency>
+				<groupId>junit</groupId>
+				<artifactId>junit</artifactId>
+				<version>4.11</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>junit</groupId>
+				<artifactId>cpsuite</artifactId>
+				<version>1.2.5</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.mockito</groupId>
+				<artifactId>mockito-core</artifactId>
+				<version>1.8.5</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.hamcrest</groupId>
+				<artifactId>hamcrest-core</artifactId>
+				<version>1.3</version>
+				<scope>test</scope>
+			</dependency>
+			<!-- The jar fest-swing-junit-4.5 was added to local repo as it is not available in unity repo.could not find it -->
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>fest-swing-junit-4.5</artifactId>
+				<version>1.2</version>
+			</dependency>
+			<dependency>
+				<groupId>org.easytesting</groupId>
+				<artifactId>fest-reflect</artifactId>
+				<version>${fest.testjars.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.easytesting</groupId>
+				<artifactId>fest-util</artifactId>
+				<!-- 1.1.2 is broken in maven central so using 1.1.3 instead -->
+				<version>1.1.3</version>
+			</dependency>
+			<dependency>
+				<groupId>org.easytesting</groupId>
+				<artifactId>fest-swing-junit</artifactId>
+				<version>${fest.testjars.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.easytesting</groupId>
+				<artifactId>fest-swing</artifactId>
+				<version>${fest.testjars.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.easytesting</groupId>
+				<artifactId>fest-assert</artifactId>
+				<version>${fest.testjars.version}</version>
+			</dependency>
+
+			<!-- can not find pom /jar in mvn repo.Added to local repo. -->
+			<dependency>
+				<groupId>${foa.groupId.obscureJars}</groupId>
+				<artifactId>MTJUnit</artifactId>
+				<version>1</version>
+				<scope>test</scope>
+			</dependency>
+			<!-- End Test dependencies -->
+		</dependencies>
+
+	</dependencyManagement>
+	<modules>
+		<module>build/mavenv2/repository</module>
+		<module>foa-junit</module>
+		<module>foa-util</module>
+		<module>foa-common</module>
+		<module>foa-lucerne</module>
+		<module>foa-tps-ws</module>
+		<module>foa-jms</module>
+		<module>foa-fixml-common</module>
+		<module>foa-mds</module>
+		<module>foa-sofa</module>
+		<module>foa-trade-ticker-server</module>
+		<module>foa-xbook-capture</module>
+		<module>foa-xcheck</module>
+		<module>tcs_dmt</module>
+		<module>foa</module>
+
+		<module>foa-eurex-fixml-common</module>
+		<module>foa-eurex-ers</module>
+		<module>foa-eurex-clearing</module>
+
+		<module>foa-eurex-rdf</module>
+		<module>foa-gtx-fix</module>
+		<module>foa-primetrade-gtx</module>
+		<module>foa-aes-gtx</module>
+
+		<module>foa-fix-common</module>
+		<module>foa-fix-relay</module>
+		<module>foa-fix-xs</module>
+		<module>foa-fix-xs-xetra</module>
+		<module>foa-xtr-report-xs</module>
+		<module>foa-eurex-xs-fix</module>
+		<module>foa-fix-xs-prt</module>
+
+		<module>om-client</module>
+		<module>cor2foa</module>
+		<module>c2f-reconciler</module>
+
+		<module>foa-agora</module>
+		<module>foa-ammcluster</module>
+		<module>foa-ammhedger</module>
+		<module>foa-cachecontainer</module>
+		<module>foa-cff2fid</module>
+		<module>foa-collector</module>
+		<module>foa-cross-request-server</module>
+		<module>foa-div2mds</module>
+		<module>foa-emsmpc</module>
+		<module>foa-emspds</module>
+
+		<module>foa-eurex-gtx</module>
+		<module>foa-favolimport</module>
+		<module>foa-feeder</module>
+		<module>foa-fid2mds</module>
+
+		<module>foa-fidclient2ems</module>
+		<module>foa-firc2ems</module>
+		<module>foa-firc2fab</module>
+		<module>foa-fixml-mqbrowse-server</module>
+		<module>foa-gomanserver</module>
+
+		<module>swx-vca</module>
+		<module>foa-gtx-swx-vca</module>
+		<module>foa-hedger</module>
+
+		<module>foa-imm</module>
+		<module>foa-launch</module>
+		<module>foa-ldn</module>
+
+		<module>foa-mqserver</module>
+		<module>foa-pds</module>
+		<module>foa-posclient</module>
+		<module>foa-posutil</module>
+
+		<module>foa-rmds</module>
+
+		<module>foa-simplefeeder</module>
+
+		<module>foa-strat</module>
+		<module>foa-syslog</module>
+		<module>foa-varcache</module>
+		<module>foa-volfit</module>
+
+		<module>foa-xbooker</module>
+		<module>swx-g2sti-feeder</module>
+		<module>tcs</module>
+		<module>swxtrader</module>
+		<!-- not added project below <module>foa-routapac</module> -->
+		<!-- The module distributionmust be last module in the modules element for assembly to work correctly. Reason is: The distribution 
+			module which generates assembly depends on al the modules to generate asembly. This dependency could be expressed as dependency 
+			element in the pom for distribution project. Or if the distribution project is last in mdules list, then it will be last 
+			one to be eeecuted by maven and hence all modules will be available,honoring dependencies. -->
+		<!-- distribution takes ages to commenting it out for now <module>distribution</module> -->
+	</modules>
+</project>
