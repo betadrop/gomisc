@@ -114,5 +114,5 @@ func ReadUpdate(records []string) (*MarketUpdate, error) {
 }
 
 func treatUpdate(update *MarketUpdate) {
-     fmt.Printf("update: %v\n", update)
+	fmt.Printf("update: %v\n", update)
 }
