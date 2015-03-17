@@ -74,9 +74,8 @@ func main() {
 			break
 		}
 		// Skip empty character data
-		if isChar(token) {
-			str := string(getCharData(token))
-			if len(strings.Trim(str, " \n\t")) == 0 {
+		if charData, ok := token.(xml.CharData); ok {
+			if len(strings.Trim(string(charData), " \n\t")) == 0 {
 				continue
 			}
 		}
@@ -98,8 +97,8 @@ func main() {
 			lastElement = stack[len(stack)-1]
 			stack = stack[:len(stack)-1]
 		}
-		if isChar(token) {
-			str := strings.Trim(getCharData(token), " \n\t")
+		if charData, ok := token.(xml.CharData); ok {
+			str := strings.Trim(string(charData), " \n\t")
 			if len(stack) > 0 {
 				// If the element is the same a last time then
 				// display it like an array.
