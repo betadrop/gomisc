@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"compress/gzip"
 	"encoding/csv"
 	"errors"
 	"flag"
@@ -10,6 +11,7 @@ import (
 	"io"
 	"net/url"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -23,40 +25,56 @@ type info struct {
 
 var parseError error = errors.New("filename must be of format CSGN_2010-12-16.csv[.gz]")
 
+// CSGN_2010-12-16.csv[.gz]
+var fileRegexp *regexp.Regexp = regexp.MustCompile(`(.+)_([0-9]{4})-([0-9]{2})-([0-9]{2})\.csv(\.gz)?$`)
+
 func parse(filename string) (info info, err error) {
 	var pos int
 	if pos = strings.LastIndex(filename, "/"); pos != -1 {
 		filename = filename[pos+1:]
 	}
-	if pos = strings.Index(filename, "_"); pos == -1 {
+	matches := fileRegexp.FindStringSubmatch(filename)
+	if matches == nil || len(matches) != 6 {
 		return info, parseError
 	}
-	info.ticker = filename[0:pos]
-	filename = filename[pos+1:]
-	if info.year, err = strconv.Atoi(filename[0:4]); err != nil {
+	info.ticker = matches[1]
+	if info.year, err = strconv.Atoi(matches[2]); err != nil {
 		return info, parseError
 	}
-	filename = filename[5:]
-	if info.month, err = strconv.Atoi(filename[0:2]); err != nil {
+	if info.month, err = strconv.Atoi(matches[3]); err != nil {
 		return info, parseError
 	}
-	filename = filename[3:]
-	if info.day, err = strconv.Atoi(filename[0:2]); err != nil {
+	if info.day, err = strconv.Atoi(matches[4]); err != nil {
 		return info, parseError
 	}
-	info.gz = strings.HasSuffix(filename, ".gz")
+	info.gz = matches[5] == ".gz"
+
 	return info, nil
 }
 
-func main() {
-	var host string
-	flag.StringVar(&host, "host", "localhost:8086", "which influx host:port to connect to")
-	var count int
-	flag.IntVar(&count, "count", 100, "how many item to process")
+var params struct {
+	host    string
+	count   int
+	verbose bool
+	dryRun  bool
+}
+
+func init() {
+	flag.StringVar(&params.host, "host", "localhost:8086", "which influx host:port to connect to")
+	flag.IntVar(&params.count, "count", 100, "how many item to process")
+	flag.BoolVar(&params.dryRun, "dry-run", false, "do not send the item to influx")
 	flag.Parse()
-	args := os.Args
-	if len(args) < 2 {
-		fmt.Fprintln(os.Stderr, "usage:", args[0], "file")
+	fmt.Printf("%+v\n", params)
+}
+
+func main() {
+	//var host string
+	//flag.StringVar(&host, "host", "localhost:8086", "which influx host:port to connect to")
+	//var count int
+	//flag.IntVar(&count, "count", 100, "how many item to process")
+	//flag.Parse()
+	if flag.NArg() < 1 {
+		fmt.Fprintln(os.Stderr, "usage:", os.Args[0], "file")
 		os.Exit(1)
 	}
 	filename := flag.Arg(0)
@@ -66,15 +84,25 @@ func main() {
 		os.Exit(1)
 	}
 	fmt.Println(info)
-	clt, err = connect(host)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Cannot connect to influxdb on %v:\n\t%v\n", host, err)
-		os.Exit(1)
+	if !params.dryRun {
+		clt, err = connect(params.host)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Cannot connect to influxdb on %v:\n\t%v\n", params.host, err)
+			os.Exit(1)
+		}
 	}
-	file, err := os.Open(filename)
+	var file io.Reader
+	file, err = os.Open(filename)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "reading "+filename+":", err)
 		os.Exit(1)
+	}
+	if info.gz == true {
+		file, err = gzip.NewReader(file)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "gunzip "+filename+":", err)
+			os.Exit(1)
+		}
 	}
 	reader := csv.NewReader(bufio.NewReader(file))
 	var lineNum int
@@ -85,8 +113,8 @@ func main() {
 			update, err := ReadUpdate(info, records)
 			if err == nil {
 				if treatUpdate("CSGN", update) {
-					count = count - 1
-					if count == 0 {
+					params.count = params.count - 1
+					if params.count == 0 {
 						break
 					}
 				}
@@ -223,10 +251,14 @@ var batch []MarketUpdate
 var current time.Time
 
 func treatUpdate(ticker string, update *MarketUpdate) (ok bool) {
-	//fmt.Println("update:", *update)
+	// Ignore duplicate time. Just take the first for now.
 	if update.Timestamp.After(current) {
-		batch = append(batch, *update)
 		current = update.Timestamp
+		if params.dryRun {
+			fmt.Println("unique update:", *update)
+			return true
+		}
+		batch = append(batch, *update)
 		if len(batch) == 50 {
 			sendBatch(ticker)
 		}
