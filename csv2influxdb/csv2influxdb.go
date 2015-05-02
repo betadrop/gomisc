@@ -7,9 +7,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/influxdb/influxdb/client"
 	"io"
-	"net/url"
 	"os"
 	"regexp"
 	"strconv"
@@ -22,6 +20,10 @@ type info struct {
 	year, month, day int
 	gz               bool
 }
+
+var batch []MarketUpdate
+var current time.Time
+var written int
 
 var parseError error = errors.New("filename must be of format CSGN_2010-12-16.csv[.gz]")
 
@@ -61,18 +63,13 @@ var params struct {
 
 func init() {
 	flag.StringVar(&params.host, "host", "localhost:8086", "which influx host:port to connect to")
-	flag.IntVar(&params.count, "count", 100, "how many item to process")
+	flag.IntVar(&params.count, "count", -1, "how many item to process")
 	flag.BoolVar(&params.dryRun, "dry-run", false, "do not send the item to influx")
 	flag.Parse()
 	fmt.Printf("%+v\n", params)
 }
 
 func main() {
-	//var host string
-	//flag.StringVar(&host, "host", "localhost:8086", "which influx host:port to connect to")
-	//var count int
-	//flag.IntVar(&count, "count", 100, "how many item to process")
-	//flag.Parse()
 	if flag.NArg() < 1 {
 		fmt.Fprintln(os.Stderr, "usage:", os.Args[0], "file")
 		os.Exit(1)
@@ -113,9 +110,11 @@ func main() {
 			update, err := ReadUpdate(info, records)
 			if err == nil {
 				if treatUpdate("CSGN", update) {
-					params.count = params.count - 1
-					if params.count == 0 {
-						break
+					if params.count > 0 {
+						params.count = params.count - 1
+						if params.count == 0 {
+							break
+						}
 					}
 				}
 			} else {
@@ -131,58 +130,12 @@ func main() {
 		}
 	}
 	flush("CSGN")
+	fmt.Fprintf(os.Stdout, "Finished %v update\n", written)
 }
 
 const (
 	stampFormat = "HH:MM:SS.XXXXXX"
 )
-
-var clt *client.Client
-
-func connect(host string) (*client.Client, error) {
-	cfg := client.Config{
-		URL: url.URL{
-			Scheme: "http",
-			Host:   host}}
-	c, err := client.NewClient(cfg)
-	if err != nil {
-		return nil, err
-	}
-	time, v, err := c.Ping()
-	if err != nil {
-		return nil, err
-	}
-	fmt.Printf("Ping in %v. Version: %v\n", time, v)
-	return c, nil
-}
-
-func write(c *client.Client, ticker string, updates []MarketUpdate) error {
-	var points []client.Point
-	for _, update := range updates {
-		fields := make(map[string]interface{})
-		fields["bid"] = update.Bid.Price
-		fields["bidsize"] = update.Bid.Size
-		fields["ask"] = update.Ask.Price
-		fields["asksize"] = update.Ask.Size
-		fields["last"] = update.Last.Price
-		fields["lastsize"] = update.Last.Size
-		first := client.Point{
-			Name:      ticker,
-			Timestamp: update.Timestamp,
-			Fields:    fields,
-		}
-		points = append(points, first)
-	}
-	bp := client.BatchPoints{
-		Points:   points,
-		Database: "marketdata"}
-	res, err := c.Write(bp)
-	if err != nil {
-		return err
-	}
-	fmt.Printf("Results: %v\n", res)
-	return nil
-}
 
 type PriceSize struct {
 	Price float64
@@ -247,17 +200,10 @@ func ReadUpdate(info info, records []string) (*MarketUpdate, error) {
 	return update, nil
 }
 
-var batch []MarketUpdate
-var current time.Time
-
 func treatUpdate(ticker string, update *MarketUpdate) (ok bool) {
 	// Ignore duplicate time. Just take the first for now.
 	if update.Timestamp.After(current) {
 		current = update.Timestamp
-		if params.dryRun {
-			fmt.Println("unique update:", *update)
-			return true
-		}
 		batch = append(batch, *update)
 		if len(batch) == 50 {
 			sendBatch(ticker)
@@ -267,21 +213,24 @@ func treatUpdate(ticker string, update *MarketUpdate) (ok bool) {
 	return false
 }
 
-func flush(ticker string) {
+func sendBatch(ticker string) {
 	if len(batch) > 0 {
-		sendBatch(ticker)
+		if !params.dryRun {
+			err := write(clt, ticker, batch)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "Cannot write to influxdb", err)
+				os.Exit(1)
+			} else {
+				fmt.Fprintf(os.Stdout, "Wrote %v OK\n", len(batch))
+			}
+		}
+		written = written + len(batch)
+		batch = nil
 	}
 }
 
-func sendBatch(ticker string) {
+func flush(ticker string) {
 	if len(batch) > 0 {
-		err := write(clt, ticker, batch)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "Cannot write to influxdb", err)
-			os.Exit(1)
-		} else {
-			fmt.Fprintf(os.Stdout, "Wrote %v OK\n", len(batch))
-		}
-		batch = nil
+		sendBatch(ticker)
 	}
 }
