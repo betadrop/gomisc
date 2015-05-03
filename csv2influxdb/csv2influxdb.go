@@ -23,7 +23,6 @@ type info struct {
 
 var batch []MarketUpdate
 var current time.Time
-var written int
 
 var parseError error = errors.New("filename must be of format CSGN_2010-12-16.csv[.gz]")
 
@@ -56,6 +55,7 @@ func parse(filename string) (info info, err error) {
 
 var params struct {
 	host    string
+	db      string
 	count   int
 	verbose bool
 	dryRun  bool
@@ -63,11 +63,14 @@ var params struct {
 
 func init() {
 	flag.StringVar(&params.host, "host", "localhost:8086", "which influx host:port to connect to")
+	flag.StringVar(&params.db, "db", "marketdata", "which influx database to use")
 	flag.IntVar(&params.count, "count", -1, "how many item to process")
 	flag.BoolVar(&params.dryRun, "dry-run", false, "do not send the item to influx")
 	flag.Parse()
 	fmt.Printf("%+v\n", params)
 }
+
+var clt Client
 
 func main() {
 	if flag.NArg() < 1 {
@@ -81,8 +84,9 @@ func main() {
 		os.Exit(1)
 	}
 	fmt.Println(info)
+	var c *Client
 	if !params.dryRun {
-		clt, err = connect(params.host)
+		c, err = NewClient(params.host, params.db)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Cannot connect to influxdb on %v:\n\t%v\n", params.host, err)
 			os.Exit(1)
@@ -109,7 +113,7 @@ func main() {
 		if records != nil {
 			update, err := ReadUpdate(info, records)
 			if err == nil {
-				if treatUpdate("CSGN", update) {
+				if treatUpdate(c, "CSGN", update) {
 					if params.count > 0 {
 						params.count = params.count - 1
 						if params.count == 0 {
@@ -129,8 +133,10 @@ func main() {
 			break
 		}
 	}
-	flush("CSGN")
-	fmt.Fprintf(os.Stdout, "Finished %v update\n", written)
+	if c != nil {
+		c.Close()
+		<-c.done
+	}
 }
 
 const (
@@ -147,6 +153,18 @@ type MarketUpdate struct {
 	Bid       PriceSize
 	Ask       PriceSize
 	Last      PriceSize
+}
+
+func (update *MarketUpdate) getFields() map[string]interface{} {
+	fields := make(map[string]interface{})
+	fields["bid"] = update.Bid.Price
+	//fields["bidsize"] = strconv.FormatInt(update.Bid.Size, 10)
+	fields["bidsize"] = update.Bid.Size
+	fields["ask"] = update.Ask.Price
+	fields["asksize"] = update.Ask.Size
+	fields["last"] = update.Last.Price
+	fields["lastsize"] = update.Last.Size
+	return fields
 }
 
 func ReadUpdate(info info, records []string) (*MarketUpdate, error) {
@@ -200,37 +218,17 @@ func ReadUpdate(info info, records []string) (*MarketUpdate, error) {
 	return update, nil
 }
 
-func treatUpdate(ticker string, update *MarketUpdate) (ok bool) {
+func treatUpdate(c *Client, ticker string, update *MarketUpdate) (ok bool) {
 	// Ignore duplicate time. Just take the first for now.
 	if update.Timestamp.After(current) {
 		current = update.Timestamp
-		batch = append(batch, *update)
-		if len(batch) == 50 {
-			sendBatch(ticker)
+		if c != nil {
+			c.Write(Point{
+				Name:      ticker,
+				Timestamp: update.Timestamp,
+				Fields:    update.getFields()})
 		}
 		return true
 	}
 	return false
-}
-
-func sendBatch(ticker string) {
-	if len(batch) > 0 {
-		if !params.dryRun {
-			err := write(clt, ticker, batch)
-			if err != nil {
-				fmt.Fprintln(os.Stderr, "Cannot write to influxdb", err)
-				os.Exit(1)
-			} else {
-				fmt.Fprintf(os.Stdout, "Wrote %v OK\n", len(batch))
-			}
-		}
-		written = written + len(batch)
-		batch = nil
-	}
-}
-
-func flush(ticker string) {
-	if len(batch) > 0 {
-		sendBatch(ticker)
-	}
 }

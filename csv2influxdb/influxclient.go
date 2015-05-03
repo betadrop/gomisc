@@ -4,48 +4,98 @@ import (
 	"fmt"
 	"github.com/influxdb/influxdb/client"
 	"net/url"
+	"os"
 )
 
-var clt *client.Client
+type Point client.Point
 
-func connect(host string) (*client.Client, error) {
+type Client struct {
+	clt     *client.Client
+	db      string
+	version string
+	in      chan Point
+	done    chan bool
+}
+
+// Return a new client and connect (ping) to it
+func NewClient(host string, db string) (*Client, error) {
+	c := new(Client)
+	var err error
 	cfg := client.Config{
 		URL: url.URL{
 			Scheme: "http",
 			Host:   host}}
-	c, err := client.NewClient(cfg)
+	c.clt, err = client.NewClient(cfg)
 	if err != nil {
 		return nil, err
 	}
-	time, v, err := c.Ping()
+	c.version, err = c.Ping()
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("Ping in %v. Version: %v\n", time, v)
+	c.db = db
+	c.in = make(chan Point)
+	c.done = make(chan bool)
+	go c.loop()
 	return c, nil
 }
 
-func write(c *client.Client, ticker string, updates []MarketUpdate) error {
-	var points []client.Point
-	for _, update := range updates {
-		fields := make(map[string]interface{})
-		fields["bid"] = update.Bid.Price
-		fields["bidsize"] = update.Bid.Size
-		fields["ask"] = update.Ask.Price
-		fields["asksize"] = update.Ask.Size
-		fields["last"] = update.Last.Price
-		fields["lastsize"] = update.Last.Size
-		first := client.Point{
-			Name:      ticker,
-			Timestamp: update.Timestamp,
-			Fields:    fields,
-		}
-		points = append(points, first)
+func (c *Client) Ping() (version string, err error) {
+	time, v, err := c.clt.Ping()
+	if err != nil {
+		return "", err
 	}
+	fmt.Printf("Ping in %v. Version: %v\n", time, v)
+	return v, nil
+}
+
+func (c *Client) Write(point Point) {
+	c.in <- point
+}
+
+func (c *Client) Close() {
+	close(c.in)
+}
+
+func (c *Client) loop() {
+	var points []client.Point
+	var written int
+	for {
+		point, ok := <-c.in
+		fmt.Printf("Point: %v\n", point)
+
+		if ok {
+			points = append(points, client.Point(point))
+			if len(points) == 50 {
+				err := c.write(points)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Cannot write: %v\n", err)
+				} else {
+					written = written + len(points)
+				}
+				points = nil
+			}
+		} else { // channel closed
+			if len(points) > 0 {
+				err := c.write(points)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Cannot write: %v\n", err)
+				} else {
+					written = written + len(points)
+				}
+			}
+			fmt.Printf("Finished %v update\n", written)
+			c.done <- true
+			break
+		}
+	}
+}
+
+func (c *Client) write(points []client.Point) error {
 	bp := client.BatchPoints{
 		Points:   points,
-		Database: "marketdata"}
-	res, err := c.Write(bp)
+		Database: c.db}
+	res, err := c.clt.Write(bp)
 	if err != nil {
 		return err
 	}
