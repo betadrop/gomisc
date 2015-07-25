@@ -7,13 +7,11 @@ import (
 	"os"
 )
 
-type Point client.Point
-
 type Client struct {
 	clt     *client.Client
 	db      string
 	version string
-	in      chan Point
+	in      chan *client.Point
 	done    chan bool
 }
 
@@ -34,7 +32,7 @@ func NewClient(host string, db string) (*Client, error) {
 		return nil, err
 	}
 	c.db = db
-	c.in = make(chan Point)
+	c.in = make(chan *client.Point)
 	c.done = make(chan bool)
 	go c.loop()
 	return c, nil
@@ -49,12 +47,14 @@ func (c *Client) Ping() (version string, err error) {
 	return v, nil
 }
 
-func (c *Client) Write(point Point) {
+func (c *Client) Write(point *client.Point) {
 	c.in <- point
 }
 
 func (c *Client) Close() {
 	close(c.in)
+	// Wait till done
+	<-c.done
 }
 
 func (c *Client) loop() {
@@ -65,7 +65,7 @@ func (c *Client) loop() {
 		fmt.Printf("Point: %v\n", point)
 
 		if ok {
-			points = append(points, client.Point(point))
+			points = append(points, *point)
 			if len(points) == 50 {
 				err := c.write(points)
 				if err != nil {

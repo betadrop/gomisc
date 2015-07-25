@@ -4,6 +4,6 @@ import (
 	"fmt"
 )
 
-func try() {
+func iota_main() {
 	fmt.Print("iota: [\u03B9]\n")
 }

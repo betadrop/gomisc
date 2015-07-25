@@ -1,7 +1,5 @@
 package main
 
 func main() {
-	//	try()
-	//	runtimeInfo()
-	goroutine()
+	iota_main()
 }
